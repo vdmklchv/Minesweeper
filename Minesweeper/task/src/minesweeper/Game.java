@@ -14,8 +14,6 @@ public class Game {
 
         do {
             playerMove(field);
-            System.out.println(field.getMinePositions());
-            System.out.println(markedFields);
         } while (!isGameWon(markedFields, field.getMinePositions()));
 
         System.out.println("Congratulations! You found all the mines!");
@@ -38,17 +36,17 @@ public class Game {
     private void playerMove(Field field) {
         // check if moveCoordinates are in markedFields
             List<Integer> moveCoordinates = getPlayerMoveCoordinates(field);
-            if (".".equals(field.getCellData(moveCoordinates.get(0), moveCoordinates.get(1))) ||
-            "*".equals(field.getCellData(moveCoordinates.get(0), moveCoordinates.get(1))) ||
-                    "X".equals(field.getCellData(moveCoordinates.get(0), moveCoordinates.get(1)))) {
-                field.markToggle(moveCoordinates.get(0), moveCoordinates.get(1));
+            if (".".equals(field.getCellData(moveCoordinates.get(0) - 1, moveCoordinates.get(1) - 1)) ||
+            "*".equals(field.getCellData(moveCoordinates.get(0) - 1, moveCoordinates.get(1) - 1)) ||
+                    "X".equals(field.getCellData(moveCoordinates.get(0) - 1, moveCoordinates.get(1) - 1))) {
+                field.markToggle(moveCoordinates.get(0) - 1, moveCoordinates.get(1) - 1);
                 // remove from coordinates if exists and add if not exist
                 toggleMoveCoordinates(moveCoordinates);
                 field.printCurrentField();
                 return;
             }
 
-            String fieldData = field.getCellData(moveCoordinates.get(0), moveCoordinates.get(1));
+            String fieldData = field.getCellData(moveCoordinates.get(0) - 1, moveCoordinates.get(1) - 1);
             try {
                 Integer.parseInt(fieldData);
                 System.out.println("There is a number here!");
@@ -62,21 +60,21 @@ public class Game {
         List<Integer> moveCoordinates = new ArrayList<>();
         Scanner sc = new Scanner(System.in);
 
-        int coordinateA = -1;
-        int coordinateB = -1;
+        int column = -1;
+        int row = -1;
 
-        while (coordinateA < 0 || coordinateB < 0 || coordinateA > field.getRows() - 1 || coordinateB > field.getRows() - 1) {
+        while (column <= 0 || row <= 0 || column > field.getRows() || row > field.getRows()) {
             try {
                 System.out.println("Set/delete mine marks (x and y coordinates): ");
-                coordinateA = sc.nextInt();
-                coordinateB = sc.nextInt();
+                column = sc.nextInt();
+                row = sc.nextInt();
             } catch (InputMismatchException e) {
                 System.out.println("Sorry, wrong input: " + e.getClass().getSimpleName());
             }
         }
 
-        moveCoordinates.add(coordinateA);
-        moveCoordinates.add(coordinateB);
+        moveCoordinates.add(column);
+        moveCoordinates.add(row);
 
         return moveCoordinates;
     }

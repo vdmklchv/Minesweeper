@@ -44,8 +44,8 @@ public class Field {
                 generatedField[row][column] = String.valueOf(source.charAt(stringCurrentPosition));
                 if ("X".equals(generatedField[row][column])) {
                     List<Integer> arr = new ArrayList<>();
-                    arr.add(row);
-                    arr.add(column);
+                    arr.add(column + 1);
+                    arr.add(row + 1);
                     mines.add(arr);
                 }
                 stringCurrentPosition++;
@@ -150,11 +150,11 @@ public class Field {
         return rows;
     }
 
-    public String getCellData(int row, int column) {
+    public String getCellData(int column, int row) {
         return this.field[row][column];
     }
 
-    public void markToggle(int row, int column) {
+    public void markToggle(int column, int row) {
         if (".".equals(field[row][column]) || "X".equals(field[row][column])) {
             field[row][column] = "*";
         } else {
