@@ -3,15 +3,18 @@ package minesweeper;
 import java.util.*;
 
 public class Game {
-
+    // VARS
+    // used to store coordinates of all marked fields by player
     private final List<List<Integer>> markedFields = new ArrayList<>();
 
     public void run() {
-        // set up the field with mines
+        /* this method contains game logic and runs the game until player correctly guesses all mines */
+        // set up and print field with mines
         int numberOfMines = getNumberOfMines();
         Field field = new Field(9, 9, numberOfMines);
-        field.printCurrentField();
+        field.printField();
 
+        // play until game is won
         do {
             playerMove(field);
         } while (!isGameWon(markedFields, field.getMinePositions()));
@@ -20,13 +23,15 @@ public class Game {
     }
 
     private int getNumberOfMines() {
+        /* this method asks user for number of mines he randomly wants to place on field and returns
+        this value */
         Scanner sc = new Scanner(System.in);
         int numberOfMines = 0;
         while (numberOfMines == 0) {
             try {
                 System.out.println("How many mines do you want on the field?");
                 numberOfMines = sc.nextInt();
-            } catch (InputMismatchException e) {
+            } catch (InputMismatchException | NumberFormatException e) {
                 System.out.println("Strange input. Please input number");
             }
         }
@@ -34,29 +39,36 @@ public class Game {
     }
 
     private void playerMove(Field field) {
-        // check if moveCoordinates are in markedFields
-            List<Integer> moveCoordinates = getPlayerMoveCoordinates(field);
-            if (".".equals(field.getCellData(moveCoordinates.get(0) - 1, moveCoordinates.get(1) - 1)) ||
-            "*".equals(field.getCellData(moveCoordinates.get(0) - 1, moveCoordinates.get(1) - 1)) ||
-                    "X".equals(field.getCellData(moveCoordinates.get(0) - 1, moveCoordinates.get(1) - 1))) {
-                field.markToggle(moveCoordinates.get(0) - 1, moveCoordinates.get(1) - 1);
-                // remove from coordinates if exists and add if not exist
-                toggleMoveCoordinates(moveCoordinates);
-                field.printCurrentField();
-                return;
-            }
+        // ask user for coordinates to mark as mine
+        List<Integer> moveCoordinates = getPlayerMoveCoordinates(field);
 
-            String fieldData = field.getCellData(moveCoordinates.get(0) - 1, moveCoordinates.get(1) - 1);
-            try {
-                Integer.parseInt(fieldData);
-                System.out.println("There is a number here!");
-            } catch (NumberFormatException e) {
-                System.out.println("Strange content of the cell");
-            }
+        // check if coordinates are ".", "*" or "X"
+        if (".".equals(field.getCellData(moveCoordinates.get(0) - 1, moveCoordinates.get(1) - 1)) ||
+                "*".equals(field.getCellData(moveCoordinates.get(0) - 1, moveCoordinates.get(1) - 1)) ||
+                "X".equals(field.getCellData(moveCoordinates.get(0) - 1, moveCoordinates.get(1) - 1))) {
+            // toggle asterisk in the field
+            field.markToggle(moveCoordinates.get(0) - 1, moveCoordinates.get(1) - 1);
+            // remove from coordinates if exists and add if it does not exist
+            toggleMoveCoordinates(moveCoordinates);
+            field.printField();
+            return; // early return if this clause has been activated
+        }
+
+        // get cell data and check if it is a number or some other erroneous data
+        String fieldData = field.getCellData(moveCoordinates.get(0) - 1, moveCoordinates.get(1) - 1);
+        try {
+            Integer.parseInt(fieldData);
+            System.out.println("There is a number here!");
+        } catch (NumberFormatException e) {
+            System.out.println("Strange content of the cell");
+        }
     }
 
 
     private List<Integer> getPlayerMoveCoordinates(Field field) {
+        /* this method takes in field object, asks user to enter coordinates within the field coordinates
+        and returns list with picked coordinates
+         */
         List<Integer> moveCoordinates = new ArrayList<>();
         Scanner sc = new Scanner(System.in);
 
@@ -80,6 +92,7 @@ public class Game {
     }
 
     private void toggleMoveCoordinates(List<Integer> coordinates) {
+        /* helper method that takes in list of coordinates and adds/removes them from user coordinate list */
         if (markedFields.contains(coordinates)) {
             markedFields.remove(coordinates);
         } else {
@@ -88,15 +101,16 @@ public class Game {
     }
 
     private boolean isGameWon(List<List<Integer>> playerMoveList, List<List<Integer>> mineList) {
-       if (playerMoveList.size() != mineList.size()) {
-           return false;
-       }
-       for (List<Integer> list: playerMoveList) {
-           if (!mineList.contains(list)) {
-               return false;
-           }
-       }
-       return true;
+        /* This method compares mine list and player move list and returns true if game is won */
+        if (playerMoveList.size() != mineList.size()) {
+            return false;
+        }
+        for (List<Integer> list: playerMoveList) {
+            if (!mineList.contains(list)) {
+                return false;
+            }
+        }
+        return true;
     }
 
 }

@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Field {
+
+    // FIELDS
     private final int rows;
     private final int columns;
 
@@ -13,6 +15,8 @@ public class Field {
 
     private List<List<Integer>> minePositions;
 
+
+    // CONSTRUCTOR
     public Field(int rows, int columns, int mines) {
         this.rows = rows;
         this.columns = columns;
@@ -20,28 +24,44 @@ public class Field {
         this.field = generateField(mines);
     }
 
+    // GETTERS
     public List<List<Integer>> getMinePositions() {
         return this.minePositions;
     }
 
+
+    public int getRows() {
+        return rows;
+    }
+
+    public String getCellData(int column, int row) {
+        return this.field[row][column];
+    }
+
     private String[][] generateField(int mines) {
+        /* method takes in number of mines, generates field and returns it */
         String[][] generatedField = new String[rows][columns];
 
+        // build a string representation of game field
         String gameString = generateGameString(mines);
 
-        populateArrayFromString(gameString, generatedField);
+        // convert string representation to array representation
+        populateArrayAndStoreMinesCoordinates(gameString, generatedField);
 
+        // place hint digits about nearby mines
         positionHelperDigits(generatedField);
 
         return generatedField;
     }
 
-    private void populateArrayFromString(String source, String[][] generatedField) {
-        List<List<Integer>> mines = new ArrayList<>();
+    private void populateArrayAndStoreMinesCoordinates(String source, String[][] generatedField) {
+        /* this method takes source string, generates field and remembers and sets mine positions */
+        List<List<Integer>> mines = new ArrayList<>(); // array to store all mines coordinates
         int stringCurrentPosition = 0;
         for (int row = 0; row < generatedField.length; row++) {
             for (int column = 0; column < generatedField[row].length; column++) {
                 generatedField[row][column] = String.valueOf(source.charAt(stringCurrentPosition));
+                // check if data is a mine, create array and add to array of mines
                 if ("X".equals(generatedField[row][column])) {
                     List<Integer> arr = new ArrayList<>();
                     arr.add(column + 1);
@@ -51,15 +71,20 @@ public class Field {
                 stringCurrentPosition++;
             }
         }
-        this.minePositions = mines;
+        this.minePositions = mines; // set field with mines
     }
 
     private String generateGameString(int mines) {
+        /* this method takes in mines, uses random method to determine probability of mine appearance
+        and returns string field representation
+         */
+
         int fieldLength = rows * columns;
 
         double chanceToPlaceMineCoefficient = mines * 1.0 / fieldLength;
         StringBuilder sb = new StringBuilder();
 
+        // generate StringBuilder object until number of mines is correct
         while (mines > 0) {
             mines = this.mines;
             sb.setLength(0);
@@ -76,7 +101,8 @@ public class Field {
         return sb.toString();
     }
 
-    public void printCurrentField() {
+    public void printField() {
+        /* prints field in a formatted way */
         System.out.println(" |123456789|");
         System.out.println("-|---------|");
         for (int row = 0; row < rows; row++) {
@@ -94,6 +120,7 @@ public class Field {
     }
 
     private void positionHelperDigits(String[][] field) {
+        /* helper method to calculate and position digits hinting about nearby mines */
         for (int row = 0; row < field.length; row++) {
             for (int column = 0; column < field.length; column++) {
                 if (".".equals(field[row][column])) {
@@ -107,6 +134,9 @@ public class Field {
     }
 
     private int calculateNearbyMinesFor(int row, int column, String[][] field) {
+        /* this method takes in row and column and field and calculates number of nearby mines
+        for a single cell.
+         */
         int count = 0;
 
         // DIRECTIONS
@@ -146,15 +176,9 @@ public class Field {
         return count;
     }
 
-    public int getRows() {
-        return rows;
-    }
-
-    public String getCellData(int column, int row) {
-        return this.field[row][column];
-    }
 
     public void markToggle(int column, int row) {
+        /* this method toggles marks on field depending on their current state */
         if (".".equals(field[row][column]) || "X".equals(field[row][column])) {
             field[row][column] = "*";
         } else {
