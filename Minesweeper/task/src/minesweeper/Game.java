@@ -3,23 +3,34 @@ package minesweeper;
 import java.util.*;
 
 public class Game {
+    static GAME_STATE state = GAME_STATE.IN_PROGRESS;
+
     // VARS
     // used to store coordinates of all marked fields by player
     private final List<List<Integer>> markedFields = new ArrayList<>();
+    private final List<List<Integer>> openFields = new ArrayList<>();
+
 
     public void run() {
         /* this method contains game logic and runs the game until player correctly guesses all mines */
         // set up and print field with mines
         int numberOfMines = getNumberOfMines();
         Field field = new Field(9, 9, numberOfMines);
-        field.printField();
+        String[][] baseField = field.getBaseField();
+        System.out.println("basefield");
+        for (String[] row: baseField) {
+            System.out.println(Arrays.toString(row));
+        }
+
+        field.printCurrentField();
 
         // play until game is won
         do {
             playerMove(field);
-        } while (!isGameWon(markedFields, field.getMinePositions()));
-
-        System.out.println("Congratulations! You found all the mines!");
+        } while (!field.hasNoMoreFreeCells(field.getFreePositions(), this.openFields) && !allMinesMarked(markedFields, field.getMinePositions(), field) && state == GAME_STATE.IN_PROGRESS);
+        if (state != GAME_STATE.LOST) {
+            System.out.println("Congratulations! You found all the mines!");
+        }
     }
 
     private int getNumberOfMines() {
@@ -40,56 +51,65 @@ public class Game {
 
     private void playerMove(Field field) {
         // ask user for coordinates to mark as mine
-        List<Integer> moveCoordinates = getPlayerMoveCoordinates(field);
-
-        // check if coordinates are ".", "*" or "X"
-        if (".".equals(field.getCellData(moveCoordinates.get(0) - 1, moveCoordinates.get(1) - 1)) ||
-                "*".equals(field.getCellData(moveCoordinates.get(0) - 1, moveCoordinates.get(1) - 1)) ||
-                "X".equals(field.getCellData(moveCoordinates.get(0) - 1, moveCoordinates.get(1) - 1))) {
-            // toggle asterisk in the field
-            field.markToggle(moveCoordinates.get(0) - 1, moveCoordinates.get(1) - 1);
-            // remove from coordinates if exists and add if it does not exist
-            toggleMoveCoordinates(moveCoordinates);
-            field.printField();
-            return; // early return if this clause has been activated
-        }
-
-        // get cell data and check if it is a number or some other erroneous data
-        String fieldData = field.getCellData(moveCoordinates.get(0) - 1, moveCoordinates.get(1) - 1);
-        try {
-            Integer.parseInt(fieldData);
-            System.out.println("There is a number here!");
-        } catch (NumberFormatException e) {
-            System.out.println("Strange content of the cell");
-        }
-    }
-
-
-    private List<Integer> getPlayerMoveCoordinates(Field field) {
-        /* this method takes in field object, asks user to enter coordinates within the field coordinates
+         /* this method takes in field object, asks user to enter coordinates within the field coordinates
         and returns list with picked coordinates
          */
+        List<Integer> markMineCoordinates = new ArrayList<>();
         List<Integer> moveCoordinates = new ArrayList<>();
         Scanner sc = new Scanner(System.in);
 
         int column = -1;
         int row = -1;
+        String command = "";
+
 
         while (column <= 0 || row <= 0 || column > field.getRows() || row > field.getRows()) {
             try {
-                System.out.println("Set/delete mine marks (x and y coordinates): ");
+                System.out.println("Set/unset mine marks or claim cell as free: ");
                 column = sc.nextInt();
                 row = sc.nextInt();
+                command = sc.next();
+                System.out.println(column + " " + row + " " + command);
             } catch (InputMismatchException e) {
                 System.out.println("Sorry, wrong input: " + e.getClass().getSimpleName());
+                sc.nextLine();
+            }
+
+            switch (command) {
+                case "mine":
+                    markMineCoordinates.add(column);
+                    markMineCoordinates.add(row);
+
+                    toggleMoveCoordinates(markMineCoordinates);
+                    field.markMineOnCurrentFieldToggle(column, row);
+                    field.printCurrentField();
+                    break;
+                case "free":
+                    moveCoordinates.add(column);
+                    moveCoordinates.add(row);
+                    openFields.add(moveCoordinates);
+                    if (isLandedOnMine(column, row, field)) {
+                        field.openBaseCellInCurrentField(column, row);
+                        field.printCurrentField();
+                        System.out.println("Game over. You have landed on mine.");
+                        state = GAME_STATE.LOST;
+                        return;
+                    }
+                    field.openBaseCellInCurrentField(column, row);
+                    field.printCurrentField();
+                    break;
+                default:
+                    System.out.println("Unknown command");
+                    break;
             }
         }
 
-        moveCoordinates.add(column);
-        moveCoordinates.add(row);
-
-        return moveCoordinates;
     }
+
+    private boolean isLandedOnMine(int column, int row, Field field) {
+        return "X".equals(field.getCellData(column - 1, row - 1));
+    }
+
 
     private void toggleMoveCoordinates(List<Integer> coordinates) {
         /* helper method that takes in list of coordinates and adds/removes them from user coordinate list */
@@ -100,8 +120,11 @@ public class Game {
         }
     }
 
-    private boolean isGameWon(List<List<Integer>> playerMoveList, List<List<Integer>> mineList) {
+    private boolean allMinesMarked(List<List<Integer>> playerMoveList, List<List<Integer>> mineList, Field field) {
         /* This method compares mine list and player move list and returns true if game is won */
+        System.out.println(field.getFreePositions());
+        System.out.println(openFields);
+
         if (playerMoveList.size() != mineList.size()) {
             return false;
         }
@@ -110,7 +133,12 @@ public class Game {
                 return false;
             }
         }
+
+        state = GAME_STATE.WON;
         return true;
     }
 
+    enum GAME_STATE {
+        IN_PROGRESS, LOST, WON
+    }
 }
