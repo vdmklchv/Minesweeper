@@ -1,6 +1,7 @@
 package minesweeper;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Field {
@@ -11,9 +12,11 @@ public class Field {
 
     private final int mines;
 
-    private final String[][] field;
+    private final String[][] baseField;
+    private final String[][] currentField;
 
     private List<List<Integer>> minePositions;
+    private List<List<Integer>> freePositions;
 
 
     // CONSTRUCTOR
@@ -21,7 +24,16 @@ public class Field {
         this.rows = rows;
         this.columns = columns;
         this.mines = mines;
-        this.field = generateField(mines);
+        this.baseField = generateBaseField(mines);
+        this.currentField = generateCurrentField();
+    }
+
+    private String[][] generateCurrentField() {
+        String[][] currentField = new String[9][9];
+        for (String[] row: currentField) {
+            Arrays.fill(row, ".");
+        }
+        return currentField;
     }
 
     // GETTERS
@@ -29,49 +41,65 @@ public class Field {
         return this.minePositions;
     }
 
+    public String[][] getCurrentField() {
+        return this.currentField;
+    }
 
     public int getRows() {
         return rows;
     }
 
-    public String getCellData(int column, int row) {
-        return this.field[row][column];
+    public String[][] getBaseField() {
+        return baseField;
     }
 
-    private String[][] generateField(int mines) {
+    public List<List<Integer>> getFreePositions() {
+        return freePositions;
+    }
+
+    public String getCellData(int column, int row) {
+        return this.baseField[row][column];
+    }
+
+
+    private String[][] generateBaseField(int mines) {
         /* method takes in number of mines, generates field and returns it */
-        String[][] generatedField = new String[rows][columns];
+        String[][] generatedBaseField = new String[rows][columns];
 
         // build a string representation of game field
         String gameString = generateGameString(mines);
 
         // convert string representation to array representation
-        populateArrayAndStoreMinesCoordinates(gameString, generatedField);
+        populateArrayAndStoreMinesAndFreeCoordinates(gameString, generatedBaseField);
 
         // place hint digits about nearby mines
-        positionHelperDigits(generatedField);
+        positionHelperDigits(generatedBaseField);
 
-        return generatedField;
+        return generatedBaseField;
     }
 
-    private void populateArrayAndStoreMinesCoordinates(String source, String[][] generatedField) {
+    private void populateArrayAndStoreMinesAndFreeCoordinates(String source, String[][] generatedField) {
         /* this method takes source string, generates field and remembers and sets mine positions */
         List<List<Integer>> mines = new ArrayList<>(); // array to store all mines coordinates
+        List<List<Integer>> free = new ArrayList<>(); // array to store all free positions
         int stringCurrentPosition = 0;
         for (int row = 0; row < generatedField.length; row++) {
             for (int column = 0; column < generatedField[row].length; column++) {
                 generatedField[row][column] = String.valueOf(source.charAt(stringCurrentPosition));
                 // check if data is a mine, create array and add to array of mines
+                List<Integer> arr = new ArrayList<>();
+                arr.add(column + 1);
+                arr.add(row + 1);
                 if ("X".equals(generatedField[row][column])) {
-                    List<Integer> arr = new ArrayList<>();
-                    arr.add(column + 1);
-                    arr.add(row + 1);
                     mines.add(arr);
+                } else {
+                    free.add(arr);
                 }
                 stringCurrentPosition++;
             }
         }
         this.minePositions = mines; // set field with mines
+        this.freePositions = free;
     }
 
     private String generateGameString(int mines) {
@@ -94,25 +122,21 @@ public class Field {
                     sb.append("X");
                     mines--;
                 } else {
-                    sb.append(".");
+                    sb.append("/");
                 }
             }
         }
         return sb.toString();
     }
 
-    public void printField() {
+    public void printCurrentField() {
         /* prints field in a formatted way */
         System.out.println(" |123456789|");
         System.out.println("-|---------|");
         for (int row = 0; row < rows; row++) {
             System.out.print(row + 1 + "|");
             for (int column = 0; column < columns; column++) {
-                if ("X".equals(field[row][column])) {
-                    System.out.print('.');
-                } else {
-                    System.out.print(field[row][column]);
-                }
+                System.out.print(this.currentField[row][column]);
             }
             System.out.print("|\n");
         }
@@ -123,7 +147,7 @@ public class Field {
         /* helper method to calculate and position digits hinting about nearby mines */
         for (int row = 0; row < field.length; row++) {
             for (int column = 0; column < field.length; column++) {
-                if (".".equals(field[row][column])) {
+                if ("/".equals(field[row][column])) {
                     int nearbyMines = calculateNearbyMinesFor(row, column, field);
                     if (nearbyMines > 0) {
                         field[row][column] = String.valueOf(nearbyMines);
@@ -177,12 +201,30 @@ public class Field {
     }
 
 
-    public void markToggle(int column, int row) {
+    public void markMineOnCurrentFieldToggle(int column, int row) {
         /* this method toggles marks on field depending on their current state */
-        if (".".equals(field[row][column]) || "X".equals(field[row][column])) {
-            field[row][column] = "*";
+        if ("*".equals(currentField[row - 1][column - 1])) {
+            currentField[row - 1][column - 1] = ".";
         } else {
-            field[row][column] = ".";
+            currentField[row - 1][column - 1] = "*";
         }
     }
+
+    public void openBaseCellInCurrentField(int column, int row) {
+        currentField[row - 1][column - 1] = baseField[row - 1][column - 1];
+    }
+
+    public boolean hasNoMoreFreeCells(List<List<Integer>> freePositions, List<List<Integer>> openFields) {
+        if (freePositions.size() != openFields.size()) {
+            return false;
+        }
+
+        for (List<Integer> coordinates: freePositions) {
+            if (!openFields.contains(coordinates)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
 }
