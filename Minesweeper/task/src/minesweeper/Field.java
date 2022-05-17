@@ -41,10 +41,6 @@ public class Field {
         return this.minePositions;
     }
 
-    public String[][] getCurrentField() {
-        return this.currentField;
-    }
-
     public int getRows() {
         return rows;
     }
