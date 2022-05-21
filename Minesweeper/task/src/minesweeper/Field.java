@@ -1,5 +1,6 @@
 package minesweeper;
 
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -18,6 +19,7 @@ public class Field {
     private List<List<Integer>> minePositions;
     private List<List<Integer>> freePositions;
 
+    Game game = new Game();
 
     // CONSTRUCTOR
     public Field(int rows, int columns, int mines) {
@@ -197,17 +199,23 @@ public class Field {
     }
 
 
-    public void markMineOnCurrentFieldToggle(int column, int row) {
+    public void markMineOnCurrentFieldToggle(int row, int column) {
         /* this method toggles marks on field depending on their current state */
-        if ("*".equals(currentField[row - 1][column - 1])) {
-            currentField[row - 1][column - 1] = ".";
-        } else {
-            currentField[row - 1][column - 1] = "*";
+        if ("*".equals(currentField[row][column])) {
+            currentField[row][column] = ".";
+        } else if (".".equals(currentField[row][column])){
+            currentField[row][column] = "*";
         }
     }
 
     public void openBaseCellInCurrentField(int column, int row) {
-        currentField[row - 1][column - 1] = baseField[row - 1][column - 1];
+        int fieldRow = row - 1;
+        int fieldColumn = column - 1;
+        currentField[fieldRow][fieldColumn] = baseField[fieldRow][fieldColumn];
+        if (calculateNearbyMinesFor(fieldRow, fieldColumn, baseField) == 0 && hasClosedCellsAround(fieldRow, fieldColumn) &&
+        currentField[fieldRow][fieldColumn].equals("/")) {
+            openNearbyCells(fieldRow, fieldColumn);
+        }
     }
 
     public boolean hasNoMoreFreeCells(List<List<Integer>> freePositions, List<List<Integer>> openFields) {
@@ -221,6 +229,100 @@ public class Field {
             }
         }
         return true;
+    }
+
+    public boolean isCellClosed(int row, int column) {
+        if (!isInBounds(row, column)) {
+            return false;
+        }
+        return ".".equals(currentField[row][column]) || "*".equals(currentField[row][column]);
+    }
+
+    private boolean isInBounds(int row, int column) {
+        return row >= 0 && row < baseField.length && column >= 0 && column < baseField.length;
+    }
+
+    private boolean hasClosedCellsAround(int row, int column) {
+        if (isCellClosed(row - 1, column) || isCellClosed(row - 1, column + 1) ||
+        isCellClosed(row, column + 1) || isCellClosed(row + 1, column + 1) ||
+        isCellClosed(row + 1, column) || isCellClosed(row + 1, column - 1) ||
+        isCellClosed(row, column - 1) || isCellClosed(row - 1, column - 1)) {
+            return true;
+        }
+        return false;
+    }
+
+    private void openNearbyCells(int row, int column) {
+        if (calculateNearbyMinesFor(row, column, baseField) > 0 || !hasClosedCellsAround(row, column)) {
+            return;
+        }
+        if (row - 1 >= 0 && isCellClosed(row - 1, column)) {
+            currentField[row - 1][column] = baseField[row - 1][column];
+            if (calculateNearbyMinesFor(row - 1, column, baseField) == 0 && hasClosedCellsAround(row - 1, column) && currentField[row - 1][column].equals("/")) {
+                openNearbyCells(row - 1, column);
+                addToListOfOpenCells(row - 1, column);
+            }
+        }
+
+        if (row - 1 >= 0 && column + 1 < baseField.length && isCellClosed(row - 1, column + 1)) {
+            currentField[row - 1][column + 1] = baseField[row - 1][column + 1];
+            if (calculateNearbyMinesFor(row - 1, column + 1, baseField) == 0 && hasClosedCellsAround(row - 1, column + 1) && currentField[row - 1][column + 1].equals("/")) {
+                openNearbyCells(row - 1, column + 1);
+                addToListOfOpenCells(row - 1, column + 1);
+            }
+        }
+
+        if (row + 1 < baseField.length && isCellClosed(row + 1, column)) {
+            currentField[row + 1][column] = baseField[row + 1][column];
+            if (calculateNearbyMinesFor(row + 1, column, baseField) == 0 && hasClosedCellsAround(row + 1, column) && currentField[row + 1][column].equals("/")) {
+                openNearbyCells(row + 1, column);
+                addToListOfOpenCells(row + 1, column);
+            }
+        }
+
+        if (row + 1 < baseField.length && column + 1 < baseField.length && isCellClosed(row + 1, column + 1)) {
+            currentField[row + 1][column + 1] = baseField[row + 1][column + 1];
+            if (calculateNearbyMinesFor(row + 1, column + 1, baseField) == 0 && hasClosedCellsAround(row + 1, column + 1) && currentField[row + 1][column + 1].equals("/")) {
+                openNearbyCells(row + 1, column + 1);
+                addToListOfOpenCells(row + 1, column + 1);
+            }
+        }
+        if (column + 1 < baseField.length && isCellClosed(row, column + 1)) {
+            currentField[row][column + 1] = baseField[row][column + 1];
+            if (calculateNearbyMinesFor(row, column + 1, baseField) == 0 && hasClosedCellsAround(row, column + 1) && currentField[row][column + 1].equals("/")) {
+                openNearbyCells(row, column + 1);
+                addToListOfOpenCells(row, column + 1);
+            }
+        }
+        if (column - 1 >= 0 && row - 1 >= 0 && isCellClosed(row - 1, column - 1)) {
+            currentField[row - 1][column - 1] = baseField[row - 1][column - 1];
+            if (calculateNearbyMinesFor(row - 1, column - 1, baseField) == 0 && hasClosedCellsAround(row - 1, column - 1) && currentField[row - 1][column - 1].equals("/")) {
+                openNearbyCells(row - 1, column - 1);
+                addToListOfOpenCells(row - 1, column - 1);
+            }
+        }
+        if (column - 1 >= 0 && row + 1 < baseField.length && isCellClosed(row + 1, column - 1)) {
+            currentField[row + 1][column - 1] = baseField[row + 1][column - 1];
+            if (calculateNearbyMinesFor(row + 1, column - 1, baseField) == 0 && hasClosedCellsAround(row + 1, column - 1) && currentField[row + 1][column - 1].equals("/")) {
+                openNearbyCells(row + 1, column - 1);
+                addToListOfOpenCells(row + 1, column - 1);
+            }
+        }
+        if (column - 1 >= 0 && isCellClosed(row, column - 1)) {
+            currentField[row][column - 1] = baseField[row][column - 1];
+            if (calculateNearbyMinesFor(row, column - 1, baseField) == 0 && hasClosedCellsAround(row, column - 1) && currentField[row][column - 1].equals("/")) {
+                openNearbyCells(row, column - 1);
+                addToListOfOpenCells(row, column - 1);
+            }
+        }
+
+    }
+
+    private void addToListOfOpenCells(int row, int column) {
+        List<Integer> tempList = new ArrayList<>();
+        tempList.add(row);
+        tempList.add(column);
+        game.setOpenCell(tempList);
     }
 
 }

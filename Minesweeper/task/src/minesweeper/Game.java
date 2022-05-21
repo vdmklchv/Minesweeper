@@ -27,7 +27,7 @@ public class Game {
         // play until game is won
         do {
             playerMove(field);
-        } while (!field.hasNoMoreFreeCells(field.getFreePositions(), this.openFields) && !allMinesMarked(markedFields, field.getMinePositions(), field) && state == GAME_STATE.IN_PROGRESS);
+        } while (!field.hasNoMoreFreeCells(field.getFreePositions(), this.openFields) && !allMinesMarked(markedFields, field.getMinePositions()) && state == GAME_STATE.IN_PROGRESS);
         if (state != GAME_STATE.LOST) {
             System.out.println("Congratulations! You found all the mines!");
         }
@@ -49,6 +49,12 @@ public class Game {
         return numberOfMines;
     }
 
+    public void setOpenCell(List<Integer> coordinates) {
+        this.openFields.add(coordinates);
+        System.out.println(openFields);
+    }
+
+
     private void playerMove(Field field) {
         // ask user for coordinates to mark as mine
          /* this method takes in field object, asks user to enter coordinates within the field coordinates
@@ -69,19 +75,26 @@ public class Game {
                 column = sc.nextInt();
                 row = sc.nextInt();
                 command = sc.next();
-                System.out.println(column + " " + row + " " + command);
-            } catch (InputMismatchException e) {
-                System.out.println("Sorry, wrong input: " + e.getClass().getSimpleName());
+                if (column <= 0 || row <= 0 || column > field.getRows() || row > field.getRows()) {
+                    System.out.println("Coordinates out of range");
+                    continue;
+                }
+            } catch (InputMismatchException | ArrayIndexOutOfBoundsException e) {
+                System.out.println("Sorry, wrong input");
                 sc.nextLine();
+                continue;
             }
 
             switch (command) {
                 case "mine":
-                    markMineCoordinates.add(column);
-                    markMineCoordinates.add(row);
+                    if (field.isCellClosed(row - 1, column - 1)) {
+                        markMineCoordinates.add(row - 1);
+                        markMineCoordinates.add(column - 1);
+                        toggleMoveCoordinates(markMineCoordinates);
+                        field.markMineOnCurrentFieldToggle(row - 1, column - 1);
+                    }
 
-                    toggleMoveCoordinates(markMineCoordinates);
-                    field.markMineOnCurrentFieldToggle(column, row);
+                    System.out.println(markMineCoordinates);
                     field.printCurrentField();
                     break;
                 case "free":
@@ -91,7 +104,7 @@ public class Game {
                     if (isLandedOnMine(column, row, field)) {
                         field.openBaseCellInCurrentField(column, row);
                         field.printCurrentField();
-                        System.out.println("Game over. You have landed on mine.");
+                        System.out.println("You stepped on a mine and failed!");
                         state = GAME_STATE.LOST;
                         return;
                     }
@@ -120,10 +133,9 @@ public class Game {
         }
     }
 
-    private boolean allMinesMarked(List<List<Integer>> playerMoveList, List<List<Integer>> mineList, Field field) {
+    private boolean allMinesMarked(List<List<Integer>> playerMoveList, List<List<Integer>> mineList) {
         /* This method compares mine list and player move list and returns true if game is won */
-        System.out.println(field.getFreePositions());
-        System.out.println(openFields);
+
 
         if (playerMoveList.size() != mineList.size()) {
             return false;
