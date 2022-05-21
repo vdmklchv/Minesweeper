@@ -67,6 +67,7 @@ public class Game {
         int column = -1;
         int row = -1;
         String command = "";
+        System.out.println(field.getMinePositions().toString());
 
 
         while (column <= 0 || row <= 0 || column > field.getRows() || row > field.getRows()) {
@@ -94,7 +95,6 @@ public class Game {
                         field.markMineOnCurrentFieldToggle(row - 1, column - 1);
                     }
 
-                    System.out.println(markMineCoordinates);
                     field.printCurrentField();
                     break;
                 case "free":

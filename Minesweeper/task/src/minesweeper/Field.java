@@ -86,8 +86,8 @@ public class Field {
                 generatedField[row][column] = String.valueOf(source.charAt(stringCurrentPosition));
                 // check if data is a mine, create array and add to array of mines
                 List<Integer> arr = new ArrayList<>();
-                arr.add(column + 1);
-                arr.add(row + 1);
+                arr.add(row);
+                arr.add(column);
                 if ("X".equals(generatedField[row][column])) {
                     mines.add(arr);
                 } else {
