@@ -77,15 +77,19 @@ public class Game {
                     field.printCurrentField();
                     break;
                 case "free":
-                    if (isLandedOnMine(column, row, field)) {
+                    if (isLandedOnMine(column, row, field) && field.getOpenFields().size() == 0) {
+                        System.out.println("You can't hit mine on first attempt. Let's start over.");
+                        this.run();
+                    } else if (isLandedOnMine(column, row, field)) {
                         field.openBaseCellInCurrentField(column, row);
                         field.printCurrentField();
                         System.out.println("You stepped on a mine and failed!");
                         state = GAME_STATE.LOST;
                         return;
+                    } else {
+                        field.openBaseCellInCurrentField(column, row);
+                        field.printCurrentField();
                     }
-                    field.openBaseCellInCurrentField(column, row);
-                    field.printCurrentField();
                     break;
                 default:
                     System.out.println("Unknown command");
