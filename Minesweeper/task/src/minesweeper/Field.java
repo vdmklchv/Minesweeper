@@ -16,10 +16,15 @@ public class Field {
     private final String[][] baseField;
     private final String[][] currentField;
 
+    // coordinates of mines and free positions on generated field
     private List<List<Integer>> minePositions;
     private List<List<Integer>> freePositions;
 
+    // collection of all fields open by user
     private final List<List<Integer>> openFields = new ArrayList<>();
+
+    // used to store coordinates of all marked fields by player
+    private final List<List<Integer>> markedFields = new ArrayList<>();
 
     // CONSTRUCTOR
     public Field(int rows, int columns, int mines) {
@@ -31,6 +36,7 @@ public class Field {
     }
 
     private String[][] generateCurrentField() {
+        /* method generates 9x9 game public field as a starting point */
         String[][] currentField = new String[9][9];
         for (String[] row: currentField) {
             Arrays.fill(row, ".");
@@ -52,9 +58,16 @@ public class Field {
     }
 
     public String getCellData(int column, int row) {
-        return this.baseField[row][column];
+        return baseField[row][column];
     }
 
+    public List<List<Integer>> getMarkedFields() {
+        return markedFields;
+    }
+
+    public List<List<Integer>> getOpenFields() {
+        return openFields;
+    }
 
     private String[][] generateBaseField(int mines) {
         /* method takes in number of mines, generates field and returns it */
@@ -92,8 +105,8 @@ public class Field {
                 stringCurrentPosition++;
             }
         }
-        this.minePositions = mines; // set field with mines
-        this.freePositions = free;
+        this.minePositions = mines; // store mine coordinates
+        this.freePositions = free; // store free cell coordinates
     }
 
     private String generateGameString(int mines) {
@@ -205,6 +218,9 @@ public class Field {
     }
 
     public void openBaseCellInCurrentField(int column, int row) {
+        /* take in coordinates and open current cell, then initiate opening nearby cells if cell is empty
+        and has no mines around
+         */
         int fieldRow = row - 1;
         int fieldColumn = column - 1;
         currentField[fieldRow][fieldColumn] = baseField[fieldRow][fieldColumn];
@@ -216,6 +232,7 @@ public class Field {
     }
 
     public boolean hasNoMoreFreeCells(List<List<Integer>> freePositions, List<List<Integer>> openFields) {
+        /* checks if all free fields are open by user */
         if (freePositions.size() != openFields.size()) {
             return false;
         }
@@ -229,6 +246,8 @@ public class Field {
     }
 
     public boolean isCellClosed(int row, int column) {
+        /* returns true if cell has not been open */
+
         if (!isInBounds(row, column)) {
             return false;
         }
@@ -236,10 +255,12 @@ public class Field {
     }
 
     private boolean isInBounds(int row, int column) {
+        /* helper to check if input coordinates are in bounds */
         return row >= 0 && row < baseField.length && column >= 0 && column < baseField.length;
     }
 
     private boolean hasClosedCellsAround(int row, int column) {
+        /* checks if cell has closed cells around it */
         return isCellClosed(row - 1, column) || isCellClosed(row - 1, column + 1) ||
                 isCellClosed(row, column + 1) || isCellClosed(row + 1, column + 1) ||
                 isCellClosed(row + 1, column) || isCellClosed(row + 1, column - 1) ||
@@ -247,6 +268,9 @@ public class Field {
     }
 
     private void openNearbyCells(int row, int column) {
+        /* recursive method to open all free cells and surrounding cells while cells are free and have no
+        mines around
+         */
         if (calculateNearbyMinesFor(row, column, baseField) > 0 || !hasClosedCellsAround(row, column)) {
             return;
         }
@@ -312,13 +336,27 @@ public class Field {
     }
 
     private void addToListOfOpenCells(int row, int column) {
+        /* helper method to add coordinates to list of cells open by user */
         List<Integer> tempList = new ArrayList<>();
         tempList.add(row);
         tempList.add(column);
         openFields.add(tempList);
     }
 
-    public List<List<Integer>> getOpenFields() {
-        return openFields;
+    public void addMarkMineCoordinate(int row, int column) {
+        /* helper method to toggle mark mine coordinates from the array */
+        List<Integer> markMineCoordinates = new ArrayList<>();
+        markMineCoordinates.add(row);
+        markMineCoordinates.add(column);
+        toggleMoveCoordinates(markMineCoordinates);
+    }
+
+    private void toggleMoveCoordinates(List<Integer> coordinates) {
+        /* helper method that takes in list of coordinates and adds/removes them from user coordinate list */
+        if (markedFields.contains(coordinates)) {
+            markedFields.remove(coordinates);
+        } else {
+            markedFields.add(coordinates);
+        }
     }
 }

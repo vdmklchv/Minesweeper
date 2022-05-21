@@ -5,10 +5,6 @@ import java.util.*;
 public class Game {
     static GAME_STATE state = GAME_STATE.IN_PROGRESS;
 
-    // VARS
-    // used to store coordinates of all marked fields by player
-    private final List<List<Integer>> markedFields = new ArrayList<>();
-
     public void run() {
         /* this method contains game logic and runs the game until player correctly guesses all mines */
         // set up and print field with mines
@@ -19,9 +15,8 @@ public class Game {
 
         // play until game is won
         do {
-            System.out.println("From field: " + field.getFreePositions().toString());
             playerMove(field);
-        } while (!field.hasNoMoreFreeCells(field.getFreePositions(), field.getOpenFields()) && !allMinesMarked(markedFields, field.getMinePositions()) && state == GAME_STATE.IN_PROGRESS);
+        } while (!field.hasNoMoreFreeCells(field.getFreePositions(), field.getOpenFields()) && !allMinesMarked(field.getMarkedFields(), field.getMinePositions()) && state == GAME_STATE.IN_PROGRESS);
         if (state != GAME_STATE.LOST) {
             System.out.println("Congratulations! You found all the mines!");
         }
@@ -49,7 +44,6 @@ public class Game {
          /* this method takes in field object, asks user to enter coordinates within the field coordinates
         and returns list with picked coordinates
          */
-        List<Integer> markMineCoordinates = new ArrayList<>();
         Scanner sc = new Scanner(System.in);
 
         int column = -1;
@@ -76,9 +70,7 @@ public class Game {
             switch (command) {
                 case "mine":
                     if (field.isCellClosed(row - 1, column - 1)) {
-                        markMineCoordinates.add(row - 1);
-                        markMineCoordinates.add(column - 1);
-                        toggleMoveCoordinates(markMineCoordinates);
+                        field.addMarkMineCoordinate(row - 1, column - 1);
                         field.markMineOnCurrentFieldToggle(row - 1, column - 1);
                     }
 
@@ -104,18 +96,10 @@ public class Game {
     }
 
     private boolean isLandedOnMine(int column, int row, Field field) {
+        /* returns true if specified coordinates contain mine */
         return "X".equals(field.getCellData(column - 1, row - 1));
     }
 
-
-    private void toggleMoveCoordinates(List<Integer> coordinates) {
-        /* helper method that takes in list of coordinates and adds/removes them from user coordinate list */
-        if (markedFields.contains(coordinates)) {
-            markedFields.remove(coordinates);
-        } else {
-            markedFields.add(coordinates);
-        }
-    }
 
     private boolean allMinesMarked(List<List<Integer>> playerMoveList, List<List<Integer>> mineList) {
         /* This method compares mine list and player move list and returns true if game is won */
