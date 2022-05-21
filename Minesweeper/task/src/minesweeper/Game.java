@@ -8,26 +8,20 @@ public class Game {
     // VARS
     // used to store coordinates of all marked fields by player
     private final List<List<Integer>> markedFields = new ArrayList<>();
-    private final List<List<Integer>> openFields = new ArrayList<>();
-
 
     public void run() {
         /* this method contains game logic and runs the game until player correctly guesses all mines */
         // set up and print field with mines
         int numberOfMines = getNumberOfMines();
         Field field = new Field(9, 9, numberOfMines);
-        String[][] baseField = field.getBaseField();
-        System.out.println("basefield");
-        for (String[] row: baseField) {
-            System.out.println(Arrays.toString(row));
-        }
 
         field.printCurrentField();
 
         // play until game is won
         do {
+            System.out.println("From field: " + field.getFreePositions().toString());
             playerMove(field);
-        } while (!field.hasNoMoreFreeCells(field.getFreePositions(), this.openFields) && !allMinesMarked(markedFields, field.getMinePositions()) && state == GAME_STATE.IN_PROGRESS);
+        } while (!field.hasNoMoreFreeCells(field.getFreePositions(), field.getOpenFields()) && !allMinesMarked(markedFields, field.getMinePositions()) && state == GAME_STATE.IN_PROGRESS);
         if (state != GAME_STATE.LOST) {
             System.out.println("Congratulations! You found all the mines!");
         }
@@ -49,11 +43,6 @@ public class Game {
         return numberOfMines;
     }
 
-    public void setOpenCell(List<Integer> coordinates) {
-        this.openFields.add(coordinates);
-        System.out.println(openFields);
-    }
-
 
     private void playerMove(Field field) {
         // ask user for coordinates to mark as mine
@@ -61,13 +50,11 @@ public class Game {
         and returns list with picked coordinates
          */
         List<Integer> markMineCoordinates = new ArrayList<>();
-        List<Integer> moveCoordinates = new ArrayList<>();
         Scanner sc = new Scanner(System.in);
 
         int column = -1;
         int row = -1;
-        String command = "";
-        System.out.println(field.getMinePositions().toString());
+        String command;
 
 
         while (column <= 0 || row <= 0 || column > field.getRows() || row > field.getRows()) {
@@ -98,9 +85,6 @@ public class Game {
                     field.printCurrentField();
                     break;
                 case "free":
-                    moveCoordinates.add(column);
-                    moveCoordinates.add(row);
-                    openFields.add(moveCoordinates);
                     if (isLandedOnMine(column, row, field)) {
                         field.openBaseCellInCurrentField(column, row);
                         field.printCurrentField();
